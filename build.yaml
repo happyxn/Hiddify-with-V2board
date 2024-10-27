@@ -1,19 +1,32 @@
-targets:
-  $default:
-    builders:
-      json_serializable:
-        options:
-          explicit_to_json: true
-      drift_dev:
-        options:
-          store_date_time_values_as_text: true
-      slang_build_runner:
-        options:
-          base_locale: en
-          fallback_strategy: base_locale
-          input_directory: assets/translations
-          input_file_pattern: .i18n.json
-          output_directory: lib/gen
-          output_file_name: translations.g.dart
-          translation_class_visibility: public
-          locale_handling: false
+name: CI
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.vscode/'
+      - 'appcast.xml'
+  push:
+    branches:
+       - main
+       - dev
+       - android-fix-action-bug
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.vscode/'
+      - 'appcast.xml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    permissions: write-all
+    if: "${{!contains(github.event.head_commit.message, 'release: version')}}"
+    with:
+      upload-artifact: ${{ github.event_name == 'push' }}
+      
